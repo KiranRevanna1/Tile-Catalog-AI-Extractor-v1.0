@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Local data
+uploads/
+output/
+runs/
+*.pdf
+
+# IDE/OS
+.vscode/
+.DS_Store
+Thumbs.db

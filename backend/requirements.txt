@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+pillow
+opencv-python
+PyMuPDF
+easyocr
+ultralytics
+numpy
+pytesseract
