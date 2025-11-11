@@ -3,12 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import os, shutil
 from extractor.pdf_pipeline import process_pdf
 from extractor.formatter import structure_products
-from routes.feedback import router as feedback_router
 
 app = FastAPI(title="Tile Catalog AI Extractor API")
-
-# Include other routers
-app.include_router(feedback_router)
 
 # CORS setup
 app.add_middleware(
@@ -18,6 +14,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def home():
+    return {"message": "Tile Catalog AI backend is running 🚀"}
 
 @app.post("/extract")
 async def extract_data(file: UploadFile = File(...)):
@@ -36,6 +36,6 @@ async def extract_data(file: UploadFile = File(...)):
     extracted_data = process_pdf(pdf_path, output_dir)
 
     # Step 4: Structure data into products
-    structured = structure_products(extracted_data, output_dir)
+    structured = structure_products(extracted_data["ocr"], output_dir)
 
     return {"products": structured, "count": len(structured)}

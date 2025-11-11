@@ -1,51 +1,72 @@
-from ultralytics import YOLO
 import os
+from ultralytics import YOLO
+from PIL import Image
+from core.logger import get_logger
 
-def detect_tiles(image_paths, output_dir="output/detections", conf_threshold=0.5):
+logger = get_logger(__name__)
+
+# Load YOLO model (ensure you have a weights file in models/)
+MODEL_PATH = "runs/detect/train15/weights/best.pt"
+
+if not os.path.exists(MODEL_PATH):
+    logger.warning(f"[WARN] YOLO model not found at {MODEL_PATH}. Detection will be skipped.")
+    model = None
+else:
+    model = YOLO(MODEL_PATH)
+
+
+def detect_tiles(input_data, output_dir="output/detections", conf_threshold=0.5):
     """
-    Runs YOLO object detection on a list of images.
-    Returns a list of detection result objects with crop paths and confidence scores.
+    Runs YOLO detection on one or multiple image paths.
+    Returns a list of detected tile crops with bounding boxes.
     """
 
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"[INFO] Loading YOLO model (yolov8s.pt)...")
-    model = YOLO("yolov8s.pt")  # Pretrained on COCO, good for general objects
+    if model is None:
+        logger.error("YOLO model is not loaded. Please place 'tile_detector.pt' in the models folder.")
+        return []
+
+    # Handle both single image and list of images
+    if isinstance(input_data, str):
+        input_images = [input_data]
+    else:
+        input_images = input_data
 
     detections = []
 
-    for img_path in image_paths:
-        print(f"[INFO] Detecting objects in {img_path} ...")
-        results = model.predict(source=img_path, conf=conf_threshold, save=False)
+    for img_path in input_images:
+        if not os.path.exists(img_path):
+            logger.warning(f"Image not found: {img_path}")
+            continue
 
-        for r_idx, result in enumerate(results):
-            boxes = result.boxes
-            if boxes is None or len(boxes) == 0:
-                print(f"  [WARN] No objects detected in {img_path}")
-                continue
+        logger.info(f"Running YOLO detection on: {img_path}")
+        results = model(img_path, conf=conf_threshold)
 
-            for i, box in enumerate(boxes):
-                cls_name = model.names[int(box.cls)]
-                conf = float(box.conf)
+        if not results or not results[0].boxes:
+            logger.info(f"No detections found for {img_path}")
+            continue
 
-                # Confidence filter
-                if conf < conf_threshold:
-                    continue
+        img = Image.open(img_path)
+        img_name = os.path.splitext(os.path.basename(img_path))[0]
 
-                # Crop the detection region
-                crop_path = os.path.join(
-                    output_dir, f"{os.path.basename(img_path).split('.')[0]}_{i}_{cls_name}.png"
-                )
-                result.save_crop(output_dir, file_name=os.path.basename(crop_path))
+        for i, box in enumerate(results[0].boxes):
+            coords = box.xyxy[0].cpu().numpy().tolist()
+            conf = float(box.conf[0].cpu().numpy())
 
-                detections.append({
-                    "source": img_path,
-                    "class": cls_name,
-                    "confidence": conf,
-                    "crop_path": crop_path
-                })
+            x1, y1, x2, y2 = map(int, coords)
+            crop = img.crop((x1, y1, x2, y2))
 
-                print(f"  [OK] Detected {cls_name} ({conf:.2f}) → {crop_path}")
+            crop_path = os.path.join(output_dir, f"{img_name}_det_{i+1}.png")
+            crop.save(crop_path)
 
-    print(f"[SUCCESS] YOLO detected {len(detections)} objects across {len(image_paths)} pages.\n")
+            detections.append({
+                "page": img_name,
+                "bbox": [x1, y1, x2, y2],
+                "confidence": conf,
+                "crop_path": crop_path
+            })
+
+        logger.info(f"✅ {len(results[0].boxes)} objects detected in {img_name}")
+
     return detections

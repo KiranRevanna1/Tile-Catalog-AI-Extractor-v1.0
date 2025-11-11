@@ -1,0 +1,9 @@
+path: C:/Users/Kiran/OneDrive/Desktop/tile-catalog-ai/backend/datasets/training
+train: images/train
+val: images/val
+
+nc: 3
+names:
+  0: tile
+  1: logo
+  2: text-block

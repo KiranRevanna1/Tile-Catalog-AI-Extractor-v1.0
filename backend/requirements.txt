@@ -1,10 +1,12 @@
 fastapi
 uvicorn
-python-multipart
 pillow
-opencv-python
-PyMuPDF
+fitz
+pymupdf
 easyocr
+torch
 ultralytics
+opencv-python
 numpy
-pytesseract
+python-multipart
+pydantic

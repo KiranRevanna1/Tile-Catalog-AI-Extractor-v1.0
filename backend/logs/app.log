@@ -1,0 +1,5 @@
+[2025-11-10 14:27:53] [WARNING] extractor.yolo_detector: [WARN] YOLO model not found at models/tile_detector.pt. Detection will be skipped.
+[2025-11-11 08:28:59] [WARNING] extractor.yolo_detector: [WARN] YOLO model not found at runs/detect/train15/weights/best.pt. Detection will be skipped.
+[2025-11-11 08:38:13] [WARNING] extractor.yolo_detector: [WARN] YOLO model not found at runs/detect/train15/weights/best.pt. Detection will be skipped.
+[2025-11-11 08:39:06] [ERROR] extractor.yolo_detector: YOLO model is not loaded. Please place 'tile_detector.pt' in the models folder.
+[2025-11-11 08:39:06] [INFO] extractor.ocr_extractor: OCR completed for 0 crops
